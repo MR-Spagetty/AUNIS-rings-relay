@@ -217,11 +217,8 @@ function MainLoop()
         OwnName})
     local loop = true
     while loop do
-        ModemMessageHandler(event.pull("modem.message"))
+        ModemMessageHandler(event.pull("modem_message"))
     end
 end
-
-
-local messageHandler = event.listen("modem_message", ModemMessageHandler)
 
 MainLoop()
