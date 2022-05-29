@@ -73,7 +73,7 @@ function BFS(graph, node, goal)
     table.insert(visited, node)
     print(serialization.serialize(queue))
 
-    while queue do
+    while #queue > 0 do
         print("looping")
         local working = queue
         print(serialization.serialize(working), working)
