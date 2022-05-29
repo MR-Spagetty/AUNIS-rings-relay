@@ -73,17 +73,20 @@ function BFS(graph, node, goal)
     table.insert(visited, node)
     print(serialization.serialize(queue))
 
+    print( serialization.serialize(graph))
+
     while #queue > 0 do
         print("looping")
-        local working = queue
+        local working = queue[1]
         print(serialization.serialize(working), working)
 
-        for i, neighbour in ipairs(graph[working]) do
+        for i, neighbour in ipairs(graph[working].NEAR) do
             if not table.contains(visited, neighbour) then
                 visited[neighbour] = working
                 table.insert(queue, neighbour)
             end
         end
+        print("for loop completed")
         if table.contains(visited, goal) then
             queue = {}
             print("finished traversing")
