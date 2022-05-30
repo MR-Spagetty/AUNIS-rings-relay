@@ -58,13 +58,19 @@ function table.contains(array, value)
             return true
         end
     end
+    for k, v in pairs(array) do
+        if k == value then
+            return true
+        end
+    end
+    return false
 end
 
 function RelayData(...)
     m.broadcast(1, ...)
 end
 
-function BFS(graph, node, goal)
+function BFS(node, goal)
     local visited = {}
     local queue = {}
     local path = {}
@@ -73,14 +79,15 @@ function BFS(graph, node, goal)
     table.insert(visited, node)
     print(serialization.serialize(queue))
 
-    print( serialization.serialize(graph))
+    print( serialization.serialize(KnownRings))
 
     while #queue > 0 do
         print("looping")
         local working = queue[1]
         print(serialization.serialize(working), working)
+        print(working, serialization.serialize(KnownRings[working]))
 
-        for i, neighbour in ipairs(graph[working].NEAR) do
+        for i, neighbour in ipairs(KnownRings[working].NEAR) do
             if not table.contains(visited, neighbour) then
                 visited[neighbour] = working
                 table.insert(queue, neighbour)
@@ -190,7 +197,11 @@ function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
     elseif data[1] == "getNetwork" then
         GetNetwork()
     elseif data[1] == "startRelay" then
-        local route = BFS(KnownRings, OwnAddress, data[2])
+        if not table.contains(KnownRings, data[2]) then
+            print(serialization.serialize(data[2]), "not in known rings")
+            return nil
+        end
+        local route = BFS(OwnAddress, data[2])
         print(m.broadcast(1, "Transport", serialization.serialize(route)))
         TransportRelay(route)
     end
@@ -201,6 +212,10 @@ end
 
 function AddAddressToKnown(data)
     if not table.contains(KnownRings, data[2]) then
+        if #serialization.unserialize(data[3]) < 1 then
+            print("ERROR rings:", data[2], "has no near rings")
+            return nil
+        end
         KnownRings[data[2]] = {}
         KnownRings[data[2]].NEAR = serialization.unserialize(data[3])
         KnownRings[data[2]].NAME = data[4]
