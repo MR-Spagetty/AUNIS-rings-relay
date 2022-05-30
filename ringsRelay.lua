@@ -36,7 +36,7 @@ elseif Type == 0 then
     OwnAddress = SerializeAddress(tr.getAddress().GOAULD)
 end
 
-KnownRings = {[OwnAddress] = NearAddresses}
+KnownRings = {}
 
 function Reset()
     AddressChain = {}
@@ -84,21 +84,24 @@ function BFS(node, goal)
     while #queue > 0 do
         print("looping")
         local working = queue[1]
-        print(serialization.serialize(working), working)
-        print(working, serialization.serialize(KnownRings[working]))
-
-        for i, neighbour in ipairs(KnownRings[working].NEAR) do
-            if not table.contains(visited, neighbour) then
-                visited[neighbour] = working
-                table.insert(queue, neighbour)
+        print(serialization.serialize(working))
+        print(serialization.serialize(KnownRings[working]))
+        if #KnownRings[working] > 0 then
+            for i, neighbour in ipairs(KnownRings[working].NEAR) do
+                if not table.contains(visited, neighbour) then
+                    visited[neighbour] = working
+                    table.insert(queue, neighbour)
+                end
             end
+        else
+            print("ERROR data for", working, "Missing")
         end
         print("for loop completed")
+        table.remove(queue, 1)
         if table.contains(visited, goal) then
             queue = {}
             print("finished traversing")
         else
-            table.remove(queue, 1)
         end
     end
     print(serialization.serialize(queue))
@@ -201,6 +204,7 @@ function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
             print(serialization.serialize(data[2]), "not in known rings")
             return nil
         end
+        print(serialization.serialize(KnownRings[data[2]]))
         local route = BFS(OwnAddress, data[2])
         print(m.broadcast(1, "Transport", serialization.serialize(route)))
         TransportRelay(route)
@@ -233,6 +237,7 @@ function MainLoop()
         {"", OwnAddress,
         serialization.serialize(NearAddresses),
         OwnName})
+    print(serialization.serialize(KnownRings))
     local loop = true
     while loop do
         ModemMessageHandler(event.pull("modem_message"))
