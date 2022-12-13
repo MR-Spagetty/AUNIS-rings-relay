@@ -206,8 +206,10 @@ local function TransportRelay(data)
     if index > 1 then
         event.pull("transportrings_teleport_finish")
     end
-    DialAddress(NearAddresses[AddressChain[index+1]])
-    event.pull("transportrings_teleport_start")
+    if index < #AddressChain then
+        DialAddress(NearAddresses[AddressChain[index+1]])
+        event.pull("transportrings_teleport_start")
+    end
     if index > 1 and index < #AddressChain then
         BounceBack(index)
     elseif index == #AddressChain then
