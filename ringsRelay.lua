@@ -1,7 +1,16 @@
 ----------------- Configuration --------------------------------
 
--- List of Players that are allowed to interact with this program
-local AllowedList = {}
+-- List of Players that are allowed to interact with this
+-- program
+local AllowedPlayerList = {}
+
+-- List of specific modem addresses that are allowed to interact
+-- with this program
+-- if message is from one of these addresses AllowedPlayerList
+-- will be disregarded
+local AllowedAddressList = {}
+
+-- if both allow lists are empty they will not be applied
 
 -- Custom name:
 -- a custom name to set for this set of rings
@@ -17,9 +26,11 @@ local Type = 0
 local Port = 1
 
 -- System code:
--- the code the system will use to identify sets fo rings that are in the system
+-- the code the system will use to identify sets fo rings that
+-- are in the system
 local SysCode = "Alpha"
 
+----------------- Declarations ---------------------------------
 
 local c = require("component")
 local tr = c.transportrings
@@ -38,6 +49,7 @@ local Locked = false
 
 local KnownRings = {}
 
+----------------- function definitions -------------------------
 
 local function SerializeAddress(address)
     local serial = ""
@@ -58,7 +70,7 @@ else
     os.exit()
 end
 
-function SetRingsID()
+local function SetRingsID()
     local name = tr.getName()
     if table.contains({"", "RESET"}, name) then
         if CustName == nil then
@@ -242,6 +254,8 @@ end
 
 local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
     local data = {...} -- select("#",  ...)
+
+
     if originAdd == LastSignal.ADDRESS and data[1] == LastSignal.SIGNAL then
         return nil
     else
@@ -259,8 +273,18 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
     elseif data[1] == "Complete" then
         Reset()
     elseif data[1] == "getNetwork" then
+        if table.contains(AllowedAddressList, originAdd) then
+            print("Relay was activated from an authorized address(\"" .. originAdd .. "\")")
+        elseif #AllowedAddressList > 0 then
+            return nil
+        end
         GetNetwork()
     elseif data[1] == "startRelay" then
+        if table.contains(AllowedAddressList, originAdd) then
+            print("Relay was activated from an authorized address(\"" .. originAdd .. "\")")
+        elseif #AllowedAddressList > 0 then
+            return nil
+        end
         if distance > 5 then
             print("message sent from too great a distance (more than 5 blocks away)")
             return nil
@@ -282,6 +306,9 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
 end
 
 local function MainLoop()
+    for i, v in ipairs(AllowedPlayerList) do
+        table.insert(AllowedAddressList, "unv-dialer-" .. v)
+    end
     SetRingsID()
     GetNearby()
     AddAddressToKnown(
