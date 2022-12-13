@@ -71,13 +71,10 @@ else
 end
 
 local function SetRingsID()
-    local name = tr.getName()
-    if table.contains({"", "RESET"}, name) then
-        if CustName == nil then
-            tr.setName(SysCode .. "|" .. m.address)
-        else
-            tr.setName(SysCode .. "|" .. CustName)
-        end
+    if table.contains({nil, ""}, CustName) then
+        tr.setName(SysCode .. "|" .. m.address)
+    else
+        tr.setName(SysCode .. "|" .. CustName)
     end
     OwnName = tr.getName()
 end
