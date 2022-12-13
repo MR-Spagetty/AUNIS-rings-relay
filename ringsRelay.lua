@@ -73,6 +73,7 @@ end
 local function Reset()
     AddressChain = {}
     Locked = false
+    print("Ready")
 end
 
 function table.index(array, value)
