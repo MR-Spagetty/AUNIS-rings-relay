@@ -190,31 +190,28 @@ local function DialAddress(address)
 end
 
 local function BounceBack(index)
-    event.pull("transportrings_teleport_start")
     event.pull("transportrings_teleport_finish")
     print("Bouncing")
     DialAddress(NearAddresses[AddressChain[index-1]])
 end
 
-local function TransportRelay(data)
+local function TransportRelay(AddressChain)
     print("relaying")
-    AddressChain = data
     local index = table.index(AddressChain, OwnName)
     if index == nil then
         print("not me")
         return nil
     end
-    if index > 1 then
+    if index > 1 and index < #AddressChain then
         event.pull("transportrings_teleport_finish")
     end
     if index < #AddressChain then
         DialAddress(NearAddresses[AddressChain[index+1]])
         event.pull("transportrings_teleport_start")
     end
-    if index > 1 and index < #AddressChain then
+    if index > 2 and index < #AddressChain - 1 then
         BounceBack(index)
     elseif index == #AddressChain then
-        event.pull("transportrings_teleport_finish")
         m.broadcast(1, "Complete")
         Reset()
     end
