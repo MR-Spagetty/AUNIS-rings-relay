@@ -189,7 +189,7 @@ local function DialAddress(address)
 
 end
 
-local function BounceBack(index, final)
+local function BounceBack(index, AddressChain, final)
     if index < final - 1 then
         event.pull("transportrings_teleport_start")
     end
@@ -218,7 +218,7 @@ local function TransportRelay(AddressChain)
         event.pull("transportrings_teleport_start")
     end
     if index > 1 and index < #AddressChain then
-        BounceBack(index, #AddressChain)
+        BounceBack(index, AddressChain, #AddressChain)
     elseif #AddressChain == 2 then
         Reset()
     end
