@@ -282,7 +282,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
             return nil
         end
         print(KnownRings[data[2]])
-        local route = BFS(OwnAddress, data[2])
+        local route = BFS(OwnName, data[2])
         print(m.broadcast(1, "Transport", serialization.serialize(route)))
         TransportRelay(route)
     end
