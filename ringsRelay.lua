@@ -232,6 +232,7 @@ local function TransportRelay(AddressChain)
     if index > 1 and index < #AddressChain then
         BounceBack(index, AddressChain, #AddressChain)
     elseif #AddressChain == 2 then
+        m.broadcast(1, "Complete")
         Reset()
     end
 end
@@ -283,10 +284,12 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
         if table.contains(AllowedAddressList, originAdd) then
             print("Relay was activated from an authorized address(\"" .. originAdd .. "\")")
         elseif #AllowedAddressList > 0 then
+            Reset()
             return nil
         end
         if distance > 5 then
             print("message sent from too great a distance (more than 5 blocks away)")
+            Reset()
             return nil
         elseif not table.contains(KnownRings, data[2]) then
             print(data[2], "not in known rings")
