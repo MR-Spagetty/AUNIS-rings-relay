@@ -201,6 +201,7 @@ local function TransportRelay(data)
     local index = table.index(AddressChain, OwnName)
     if index == nil then
         print("not me")
+        return nil
     end
     if index > 1 then
         event.pull("transportrings_teleport_finish")
