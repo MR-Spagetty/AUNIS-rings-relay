@@ -99,16 +99,6 @@ function table.contains(array, value)
     return false
 end
 
-function table.len(array)
-    local len = #array
-    if len == 0 then
-        for k, v in pairs(array) do
-            len = len + 1
-        end
-    end
-    return len
-end
-
 function table.keys(array)
     local keys = {}
     for k, v in pairs(array) do
@@ -142,10 +132,11 @@ local function BFS(node, goal)
     while #queue > 0 do
         print("looping")
         local working = {queue[1]}
+        local near = table.keys(KnownRings[working[1]].NEAR)
         print(serialization.serialize(working))
         print(serialization.serialize(KnownRings[working[1]]))
-        if table.len(KnownRings[working[1]].NEAR) > 0 then
-            for i, neighbour in ipairs(table.keys(KnownRings[working[1]].NEAR)) do
+        if #near > 0 then
+            for i, neighbour in ipairs(near) do
                 if not table.contains(visited, neighbour) then
                     visited[neighbour] = working
                     table.insert(queue, neighbour)
@@ -238,7 +229,7 @@ end
 
 local function AddAddressToKnown(data)
     if not table.contains(KnownRings, data[#data]) then
-        if table.len(serialization.unserialize(data[3])) < 1 then
+        if #table.keys(serialization.unserialize(data[3])) < 1 then
             print("ERROR rings:", data[#data], "has no near rings")
             return nil
         end
