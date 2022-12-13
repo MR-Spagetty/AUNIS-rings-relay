@@ -80,14 +80,13 @@ function BFS(node, goal)
     print(serialization.serialize(queue))
 
     print( serialization.serialize(KnownRings))
-
     while #queue > 0 do
         print("looping")
-        local working = queue[1]
+        local working = {queue[1]}
         print(serialization.serialize(working))
-        print(serialization.serialize(KnownRings[working]))
-        if #KnownRings[working] > 0 then
-            for i, neighbour in ipairs(KnownRings[working].NEAR) do
+        print(serialization.serialize(KnownRings[working[1]]))
+        if #KnownRings[working[1]].NEAR > 0 then
+            for i, neighbour in ipairs(KnownRings[working[1]].NEAR) do
                 if not table.contains(visited, neighbour) then
                     visited[neighbour] = working
                     table.insert(queue, neighbour)
@@ -101,7 +100,6 @@ function BFS(node, goal)
         if table.contains(visited, goal) then
             queue = {}
             print("finished traversing")
-        else
         end
     end
     print(serialization.serialize(queue))
@@ -110,11 +108,13 @@ function BFS(node, goal)
     local reversePath = {}
     table.insert(reversePath, goal)
     while not atStart do
-        table.insert(reversePath, visited[reversePath[#reversePath]])
+        table.insert(reversePath, visited[reversePath[#reversePath]][1])
         if reversePath[#reversePath] == node then
             print("Found correct reverse path")
             atStart = true
         end
+        print(reversePath[#reversePath])
+        os.sleep()
     end
     print(serialization.serialize(reversePath))
     for i = #reversePath, 1, -1 do
