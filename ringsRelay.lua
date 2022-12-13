@@ -44,7 +44,6 @@ local function SerializeAddress(address)
     for i, glyph in ipairs(address) do
         serial = serial .. glyph .. ", "
     end
-    print (serial)
     return serial
 end
 
@@ -126,15 +125,9 @@ local function BFS(node, goal)
 
     table.insert(queue, node)
     table.insert(visited, node)
-    print(serialization.serialize(queue))
-
-    print( serialization.serialize(KnownRings))
     while #queue > 0 do
-        print("looping")
         local working = {queue[1]}
         local near = table.keys(KnownRings[working[1]].NEAR)
-        print(serialization.serialize(working))
-        print(serialization.serialize(KnownRings[working[1]]))
         if #near > 0 then
             for i, neighbour in ipairs(near) do
                 if not table.contains(visited, neighbour) then
@@ -145,30 +138,22 @@ local function BFS(node, goal)
         else
             print("ERROR data for", working, "Missing")
         end
-        print("for loop completed")
         table.remove(queue, 1)
         if table.contains(visited, goal) then
             queue = {}
-            print("finished traversing")
         end
     end
-    print(serialization.serialize(queue))
-    print(serialization.serialize(visited))
     local atStart = false
     local reversePath = {}
     table.insert(reversePath, goal)
     while not atStart do
         table.insert(reversePath, visited[reversePath[#reversePath]][1])
         if reversePath[#reversePath] == node then
-            print("Found correct reverse path")
             atStart = true
         end
-        print(reversePath[#reversePath])
         os.sleep()
     end
-    print(serialization.serialize(reversePath))
     for i = #reversePath, 1, -1 do
-        print("found correct path")
         table.insert(path, reversePath[i])
     end
     return path
@@ -191,7 +176,6 @@ local function DialAddress(address)
     local addressUnSed, a = serialization.unserialize("{\""..
         address:gsub(", ", "\", \"").. "\"}")
     if #addressUnSed < 4 then
-        print(addressUnSed)
         return nil
     end
     table.remove(addressUnSed, 5)
@@ -213,7 +197,7 @@ end
 
 local function TransportRelay(data)
     print("relaying")
-    AddressChain = data[2]
+    AddressChain = data
     local index = table.index(AddressChain, OwnName)
     if index > 1 then
         event.pull("transportrings_teleport_finish")
@@ -240,7 +224,6 @@ local function AddAddressToKnown(data)
 end
 
 local function GetNetwork()
-    print("Getting the network")
     m.broadcast(1, "Gimme")
 end
 
@@ -252,14 +235,11 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
         LastSignal.ADDRESS = originAdd
         LastSignal.SIGNAL = data[1]
     end
-    print(serialization.serialize(data))
     if data[1] == "Collect" then
         AddAddressToKnown(data)
-        -- print(serialization.serialize(KnownRings))
     elseif data[1] == "Gimme" then
         local nearAddressesSerial = serialization.serialize(NearAddresses)
-        print(nearAddressesSerial)
-        print(m.broadcast(1, "Collect", OwnAddress, nearAddressesSerial, OwnName))
+        m.broadcast(1, "Collect", OwnAddress, nearAddressesSerial, OwnName)
     elseif data[1] == "Transport" then
         Locked = true
         TransportRelay(data)
@@ -274,7 +254,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
         end
         print(KnownRings[data[2]])
         local route = BFS(OwnName, data[2])
-        print(m.broadcast(1, "Transport", serialization.serialize(route)))
+        m.broadcast(1, "Transport", serialization.serialize(route))
         TransportRelay(route)
     end
     if distance > 0.9*m.getStrength() then
@@ -289,7 +269,6 @@ local function MainLoop()
         {"", OwnAddress,
         serialization.serialize(NearAddresses),
         OwnName})
-    print(serialization.serialize(KnownRings))
     local loop = true
     while loop do
         ModemMessageHandler(event.pull("modem_message"))
