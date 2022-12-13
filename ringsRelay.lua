@@ -128,10 +128,6 @@ local function BFS(node, goal)
     table.insert(visited, node)
     while #queue > 0 do
         local working = {queue[1]}
-        print(serialization.serialize(working))
-        print(working[1])
-        print(serialization.serialize(KnownRings))
-        print(serialization.serialize(KnownRings[working]))
         local near = table.keys(KnownRings[working[1]].NEAR)
         if #near > 0 then
             for i, neighbour in ipairs(near) do
@@ -200,6 +196,11 @@ local function BounceBack(index, final)
     event.pull("transportrings_teleport_finish")
     print("Bouncing")
     DialAddress(NearAddresses[AddressChain[index-1]])
+    event.pull("transportrings_teleport_finish")
+    if index == 2 then
+        m.broadcast(1, "Complete")
+    end
+    Reset()
 end
 
 local function TransportRelay(AddressChain)
@@ -218,9 +219,7 @@ local function TransportRelay(AddressChain)
     end
     if index > 1 and index < #AddressChain then
         BounceBack(index, #AddressChain)
-    elseif index == #AddressChain then
-        event.pull("transportrings_teleport_finish")
-        m.broadcast(1, "Complete")
+    elseif #AddressChain == 2 then
         Reset()
     end
 end
@@ -262,11 +261,14 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
     elseif data[1] == "getNetwork" then
         GetNetwork()
     elseif data[1] == "startRelay" then
-        if not table.contains(KnownRings, data[2]) then
+        if distance > 5 then
+            print("message sent from too great a distance (more than 5 blocks away)")
+            return nil
+        elseif not table.contains(KnownRings, data[2]) then
             print(data[2], "not in known rings")
             return nil
-        elseif distance > 5 then
-            print("message sent from too great a distance (more than 5 blocks away)")
+        elseif data[2] == OwnName then
+            print("you can't transport to the location you are already at")
             return nil
         end
         print(KnownRings[data[2]])
