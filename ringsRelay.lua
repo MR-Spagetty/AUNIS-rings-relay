@@ -21,6 +21,11 @@ local CustName = nil
 -- 1 for Ori
 local Type = 0
 
+-- Get Network on boot:
+-- whether or not to get the relay network on boot
+-- you will likly only haev to set this to true on one relay
+local GetNetworkOnBoot = false
+
 -- Comms port:
 -- the port the system will use for communication
 local Port = 1
@@ -315,6 +320,9 @@ local function MainLoop()
         {"", OwnAddress,
         serialization.serialize(NearAddresses),
         OwnName})
+    if GetNetworkOnBoot then
+        GetNetwork()
+    end
     local loop = true
     while loop do
         ModemMessageHandler(event.pull("modem_message"))
