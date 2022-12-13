@@ -109,6 +109,22 @@ function table.len(array)
     return len
 end
 
+function table.keys(array)
+    local keys = {}
+    for k, v in pairs(array) do
+        table.insert(keys, k)
+    end
+    return keys
+end
+
+function table.values(array)
+    local values = {}
+    for k, v in pairs(array) do
+        table.insert(values, v)
+    end
+    return values
+end
+
 local function RelayData(...)
     m.broadcast(Port, ...)
 end
@@ -128,8 +144,8 @@ local function BFS(node, goal)
         local working = {queue[1]}
         print(serialization.serialize(working))
         print(serialization.serialize(KnownRings[working[1]]))
-        if #KnownRings[working[1]].NEAR > 0 then
-            for i, neighbour in ipairs(KnownRings[working[1]].NEAR) do
+        if table.len(KnownRings[working[1]].NEAR) > 0 then
+            for i, neighbour in ipairs(table.keys(KnownRings[working[1]].NEAR)) do
                 if not table.contains(visited, neighbour) then
                     visited[neighbour] = working
                     table.insert(queue, neighbour)
