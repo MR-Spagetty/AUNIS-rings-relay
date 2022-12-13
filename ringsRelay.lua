@@ -189,7 +189,10 @@ local function DialAddress(address)
 
 end
 
-local function BounceBack(index)
+local function BounceBack(index, final)
+    if index < final - 1 then
+        event.pull("transportrings_teleport_start")
+    end
     event.pull("transportrings_teleport_finish")
     print("Bouncing")
     DialAddress(NearAddresses[AddressChain[index-1]])
@@ -209,9 +212,10 @@ local function TransportRelay(AddressChain)
         DialAddress(NearAddresses[AddressChain[index+1]])
         event.pull("transportrings_teleport_start")
     end
-    if index > 2 and index < #AddressChain - 1 then
-        BounceBack(index)
+    if index > 1 and index < #AddressChain then
+        BounceBack(index, #AddressChain)
     elseif index == #AddressChain then
+        event.pull("transportrings_teleport_finish")
         m.broadcast(1, "Complete")
         Reset()
     end
