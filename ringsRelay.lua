@@ -1,27 +1,45 @@
+----------------- Configuration --------------------------------
+
 -- List of Players that are allowed to interact with this program
-AllowedList = {}
+local AllowedList = {}
 
-c = require("component")
-tr = c.transportrings
-m = c.modem
-serialization = require("serialization")
-event = require("event")
-OwnName = tr.getName()
+-- Custom name:
+-- a custom name to set for this set of rings
+local CustName = nil
 
-m.setWakeMessage('', true)
-m.open(1)
-m.setStrength(200)
-NearAddresses = {}
-AddressChain = {}
-LastSignal = {ADDRESS = nil, SIGNAL = nil}
-Locked = false
 -- Rings Type:
 -- 0 for Goa'uld
 -- 1 for Ori
-Type = 0
+local Type = 0
+
+-- Comms port:
+-- the port the system will use for communication
+local Port = 1
+
+-- System code:
+-- the code the system will use to identify sets fo rings that are in the system
+local SysCode = "Alpha"
 
 
-function SerializeAddress(address)
+local c = require("component")
+local tr = c.transportrings
+local m = c.modem
+local serialization = require("serialization")
+local event = require("event")
+local OwnName = ""
+
+m.setWakeMessage('', true)
+m.open(Port)
+m.setStrength(200)
+local NearAddresses = {}
+local AddressChain = {}
+local LastSignal = {ADDRESS = nil, SIGNAL = nil}
+local Locked = false
+
+local KnownRings = {}
+
+
+local function SerializeAddress(address)
     local serial = ""
     for i, glyph in ipairs(address) do
         serial = serial .. glyph .. ", "
@@ -30,20 +48,35 @@ function SerializeAddress(address)
     return serial
 end
 
+local OwnAddress = ""
+
 if Type == 1 then
     OwnAddress = SerializeAddress(tr.getAddress().ORI)
 elseif Type == 0 then
     OwnAddress = SerializeAddress(tr.getAddress().GOAULD)
+else
+    print("Unknown address type")
+    os.exit()
 end
 
-KnownRings = {}
+function SetRingsID()
+    local name = tr.getName()
+    if table.contains({"", "RESET"}, name) then
+        if CustName == nil then
+            tr.setName(SysCode .. "|" .. m.address)
+        else
+            tr.setName(SysCode .. "|" .. CustName)
+        end
+    end
+    OwnName = tr.getName()
+end
 
-function Reset()
+local function Reset()
     AddressChain = {}
     Locked = false
 end
 
-function indexOf(array, value)
+function table.index(array, value)
     for i, v in ipairs(array) do
         if v == value then
             return i
@@ -66,11 +99,11 @@ function table.contains(array, value)
     return false
 end
 
-function RelayData(...)
-    m.broadcast(1, ...)
+local function RelayData(...)
+    m.broadcast(Port, ...)
 end
 
-function BFS(node, goal)
+local function BFS(node, goal)
     local visited = {}
     local queue = {}
     local path = {}
@@ -124,19 +157,20 @@ function BFS(node, goal)
     return path
 end
 
-function GetNearby()
+local function GetNearby()
+    local temp_near = tr.getAvailableRings()
     local tempAdds = tr.getAvailableRingsAddresses()
     NearAddresses = {}
     for i, address in ipairs(tempAdds) do
         if Type == 0 then
-            table.insert(NearAddresses, address.GOAULD)
+            table[temp_near[address.GOAULD]] = address.GOAULD
         elseif Type == 1 then
-            table.insert(NearAddresses, address.ORI)
+            table[temp_near[address.ORI]] = address.ORI
         end
     end
 end
 
-function DialAddress(address)
+local function DialAddress(address)
     local addressUnSed, a = serialization.unserialize("{\""..
         address:gsub(", ", "\", \"").. "\"}")
     if #addressUnSed < 4 then
@@ -153,14 +187,21 @@ function DialAddress(address)
 
 end
 
-function TransportRelay(data)
+local function BounceBack(index)
+    event.pull("transportrings_teleport_start")
+    event.pull("transportrings_teleport_finish")
+    print("Bouncing")
+    DialAddress(NearAddresses[AddressChain[index-1]])
+end
+
+local function TransportRelay(data)
     print("relaying")
     AddressChain = data[2]
-    local index = indexOf(AddressChain, OwnAddress)
+    local index = table.index(AddressChain, OwnName)
     if index > 1 then
         event.pull("transportrings_teleport_finish")
     end
-    DialAddress(AddressChain[index+1])
+    DialAddress(NearAddresses[AddressChain[index+1]])
     event.pull("transportrings_teleport_start")
     if index > 1 and index < #AddressChain then
         BounceBack(index)
@@ -169,14 +210,24 @@ function TransportRelay(data)
     end
 end
 
-function BounceBack(index)
-    event.pull("transportrings_teleport_start")
-    event.pull("transportrings_teleport_finish")
-    print("Bouncing")
-    DialAddress(AddressChain[index-1])
+local function AddAddressToKnown(data)
+    if not table.contains(KnownRings, data[#data]) then
+        if #serialization.unserialize(data[3]) < 1 then
+            print("ERROR rings:", data[2], "has no near rings")
+            return nil
+        end
+        KnownRings[data[#data]] = {}
+        KnownRings[data[#data]].NEAR = serialization.unserialize(data[3])
+        KnownRings[data[#data]].ADDRESS = data[2]
+    end
 end
 
-function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
+local function GetNetwork()
+    print("Getting the network")
+    m.broadcast(1, "Gimme")
+end
+
+local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
     local data = {...} -- select("#",  ...)
     if originAdd == LastSignal.ADDRESS and data[1] == LastSignal.SIGNAL then
         return nil
@@ -201,10 +252,10 @@ function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
         GetNetwork()
     elseif data[1] == "startRelay" then
         if not table.contains(KnownRings, data[2]) then
-            print(serialization.serialize(data[2]), "not in known rings")
+            print(data[2], "not in known rings")
             return nil
         end
-        print(serialization.serialize(KnownRings[data[2]]))
+        print(KnownRings[data[2]])
         local route = BFS(OwnAddress, data[2])
         print(m.broadcast(1, "Transport", serialization.serialize(route)))
         TransportRelay(route)
@@ -214,24 +265,8 @@ function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
     end
 end
 
-function AddAddressToKnown(data)
-    if not table.contains(KnownRings, data[2]) then
-        if #serialization.unserialize(data[3]) < 1 then
-            print("ERROR rings:", data[2], "has no near rings")
-            return nil
-        end
-        KnownRings[data[2]] = {}
-        KnownRings[data[2]].NEAR = serialization.unserialize(data[3])
-        KnownRings[data[2]].NAME = data[4]
-    end
-end
-
-function GetNetwork()
-    print("Getting teh network")
-    m.broadcast(1, "Gimme")
-end
-
 function MainLoop()
+    SetRingsID()
     GetNearby()
     AddAddressToKnown(
         {"", OwnAddress,
