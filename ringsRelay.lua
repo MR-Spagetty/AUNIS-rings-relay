@@ -251,6 +251,9 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
         if not table.contains(KnownRings, data[2]) then
             print(data[2], "not in known rings")
             return nil
+        elseif distance > 5 then
+            print("message sent from too grate a distance (more than 5 blocks away)")
+            return nil
         end
         print(KnownRings[data[2]])
         local route = BFS(OwnName, data[2])
