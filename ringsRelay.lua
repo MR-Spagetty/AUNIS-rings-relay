@@ -173,9 +173,9 @@ local function GetNearby()
     NearAddresses = {}
     for i, address in ipairs(tempAdds) do
         if Type == 0 then
-            table[temp_near[address.GOAULD]] = address.GOAULD
+            NearAddresses[temp_near[address.GOAULD]] = address.GOAULD
         elseif Type == 1 then
-            table[temp_near[address.ORI]] = address.ORI
+            NearAddresses[temp_near[address.ORI]] = address.ORI
         end
     end
 end
