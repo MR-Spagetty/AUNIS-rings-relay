@@ -128,6 +128,10 @@ local function BFS(node, goal)
     table.insert(visited, node)
     while #queue > 0 do
         local working = {queue[1]}
+        print(serialization.serialize(working))
+        print(working[1])
+        print(serialization.serialize(KnownRings))
+        print(serialization.serialize(KnownRings[working]))
         local near = table.keys(KnownRings[working[1]].NEAR)
         if #near > 0 then
             for i, neighbour in ipairs(near) do
