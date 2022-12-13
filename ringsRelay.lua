@@ -199,6 +199,9 @@ local function TransportRelay(data)
     print("relaying")
     AddressChain = data
     local index = table.index(AddressChain, OwnName)
+    if index == nil then
+        print("not me")
+    end
     if index > 1 then
         event.pull("transportrings_teleport_finish")
     end
@@ -206,8 +209,10 @@ local function TransportRelay(data)
     event.pull("transportrings_teleport_start")
     if index > 1 and index < #AddressChain then
         BounceBack(index)
-    else
+    elseif index == #AddressChain then
+        event.pull("transportrings_teleport_finish")
         m.broadcast(1, "Complete")
+        Reset()
     end
 end
 
@@ -242,7 +247,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
         m.broadcast(1, "Collect", OwnAddress, nearAddressesSerial, OwnName)
     elseif data[1] == "Transport" then
         Locked = true
-        TransportRelay(data)
+        TransportRelay(serialization.unserialize(data[2]))
     elseif data[1] == "Complete" then
         Reset()
     elseif data[1] == "getNetwork" then
@@ -252,7 +257,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
             print(data[2], "not in known rings")
             return nil
         elseif distance > 5 then
-            print("message sent from too grate a distance (more than 5 blocks away)")
+            print("message sent from too great a distance (more than 5 blocks away)")
             return nil
         end
         print(KnownRings[data[2]])
