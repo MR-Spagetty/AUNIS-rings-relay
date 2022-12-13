@@ -99,6 +99,16 @@ function table.contains(array, value)
     return false
 end
 
+function table.len(array)
+    local len = #array
+    if len == 0 then
+        for k, v in pairs(array) do
+            len = len + 1
+        end
+    end
+    return len
+end
+
 local function RelayData(...)
     m.broadcast(Port, ...)
 end
@@ -212,8 +222,8 @@ end
 
 local function AddAddressToKnown(data)
     if not table.contains(KnownRings, data[#data]) then
-        if #serialization.unserialize(data[3]) < 1 then
-            print("ERROR rings:", data[2], "has no near rings")
+        if table.len(serialization.unserialize(data[3])) < 1 then
+            print("ERROR rings:", data[#data], "has no near rings")
             return nil
         end
         KnownRings[data[#data]] = {}
@@ -265,7 +275,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
     end
 end
 
-function MainLoop()
+local function MainLoop()
     SetRingsID()
     GetNearby()
     AddAddressToKnown(
