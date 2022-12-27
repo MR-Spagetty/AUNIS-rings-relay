@@ -64,7 +64,7 @@ local function time()
     local tmpFile = io.open("/tmp/.time", "w")
     tmpFile:write()
     tmpFile:close()
-    return os.date("%H:%M %d/%m", math.floor(filesystem.lastModified("/tmp/.time") / 1000))..""
+    return os.date("%H:%M %d/%m", math.floor(fs.lastModified("/tmp/.time") / 1000))..""
 end
 
 local function log(type, ...)
