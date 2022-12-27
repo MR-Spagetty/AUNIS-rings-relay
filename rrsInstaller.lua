@@ -3,7 +3,7 @@ local shell = require("shell")
 local c = require("component")
 local fs = require("filesystem")
 if c.isAvailable("internet") then
-shell.execute("wget https://raw.githubusercontent.com/MR-Spagetty/AUNIS-rings-relay/main/rrsVersions.lua /home/rrsGitVersions.lua")
+shell.execute("wget https://raw.githubusercontent.com/MR-Spagetty/AUNIS-rings-relay/main/rrsVersions.lua /home/rrsGitVersions.lua -f")
 
 
 
@@ -13,7 +13,7 @@ local GitVersions = require("/home/rrsGitVersions")
 local updated = false
 for comp, GitVersion in pairs(GitVersions) do
     if (versions[comp] < GitVersion) + (arg[1] == "--force") then
-        if shell.execute(GitVersions[comp].link .. " /RRS/" .. comp .. ".lua")
+        if shell.execute("wget " .. GitVersions[comp].link .. " /RRS/" .. comp .. ".lua -f")
         then updated = true
             for _, line in ipairs(GitVersions[comp].changelog) do
             print(line)
@@ -21,7 +21,7 @@ for comp, GitVersion in pairs(GitVersions) do
         else print("one or more updates failed attempting to run the prgram may haev undesired results") os.exit() end
     end
     if updated
-    then shell.execute("wget https://raw.githubusercontent.com/MR-Spagetty/AUNIS-rings-relay/main/rrsVersions.lua /RRS/rrsVersions.lua")
+    then shell.execute("wget https://raw.githubusercontent.com/MR-Spagetty/AUNIS-rings-relay/main/rrsVersions.lua /RRS/rrsVersions.lua -f")
     else print("if you want to force the program to install the current github version please use \"rss --force\"")
     end
 end
