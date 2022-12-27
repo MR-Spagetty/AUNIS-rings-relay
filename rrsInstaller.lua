@@ -15,6 +15,9 @@ for comp, GitVersion in pairs(GitVersions) do
     if (versions[comp] < GitVersion) + (arg[1] == "--force") then
         if shell.execute(GitVersions[comp].link .. " /RRS/" .. comp .. ".lua")
         then updated = true
+            for _, line in ipairs(GitVersions[comp].changelog) do
+            print(line)
+            end
         else print("one or more updates failed attempting to run the prgram may haev undesired results") os.exit() end
     end
     if updated
