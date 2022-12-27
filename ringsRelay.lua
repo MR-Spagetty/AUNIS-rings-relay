@@ -23,7 +23,7 @@ local Type = 0
 
 -- Get Network on boot:
 -- whether or not to get the relay network on boot
--- you will likly only haev to set this to true on one relay
+-- you will likly only have to set this to true on one relay
 local GetNetworkOnBoot = false
 
 -- Comms port:
@@ -322,6 +322,8 @@ local function MainLoop()
         OwnName})
     if GetNetworkOnBoot then
         GetNetwork()
+        local nearAddressesSerial = serialization.serialize(NearAddresses)
+        m.broadcast(1, "Collect", OwnAddress, nearAddressesSerial, OwnName)
     end
     local loop = true
     while loop do
