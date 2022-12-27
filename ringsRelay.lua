@@ -12,7 +12,7 @@ local serialization = require("serialization")
 local event = require("event")
 local fs = require("filesystem")
 shell.setWorkingDirectory("/RRS")
-local conf = require("rrsConf")
+local conf = require("config")
 local BFS = require("route").BFS
 local moreTable = require("moreTable")
 
