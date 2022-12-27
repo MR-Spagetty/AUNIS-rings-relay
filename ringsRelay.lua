@@ -1,6 +1,10 @@
 ----------------- Declarations ---------------------------------
 
 local c = require("component")
+if not c.isAvailable("transportrings") then
+    print("Transport rings are required for the operation of this program")
+    os.exit()
+end
 local tr = c.transportrings
 local m = c.modem
 local serialization = require("serialization")
