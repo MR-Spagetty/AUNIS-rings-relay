@@ -1,14 +1,19 @@
-local versions = require("rrsVersions")
 local shell = require("shell")
 local c = require("component")
 local fs = require("filesystem")
+
+local workingDir = shell.getWorkingDirectory()
+shell.setWorkingDirectory("/RRS")
+local versions = require("rrsVersions")
+
 if c.isAvailable("internet") then
+shell.setWorkingDirectory("/home")
 shell.execute("wget https://raw.githubusercontent.com/MR-Spagetty/AUNIS-rings-relay/main/rrsVersions.lua /home/rrsGitVersions.lua -f")
 
 
 
 
-local GitVersions = require("/home/rrsGitVersions")
+local GitVersions = require("rrsGitVersions")
 
 local updated = false
 for comp, GitVersion in pairs(GitVersions) do
@@ -44,4 +49,5 @@ file:write(rrsBinFile)
 file:close()
 print("you can now run Rings relay system with \"rrs\" in the shell")
 end
+shell.setWorkingDirectory(workingDir)
 shell.execute("/RRS/ringsRelay")

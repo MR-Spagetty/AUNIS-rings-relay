@@ -1,5 +1,6 @@
 ----------------- Declarations ---------------------------------
-
+local shell = require("shell")
+local workingDir = shell.getWorkingDirectory()
 local c = require("component")
 if not c.isAvailable("transportrings") then
     print("Transport rings are required for the operation of this program")
@@ -10,6 +11,7 @@ local m = c.modem
 local serialization = require("serialization")
 local event = require("event")
 local fs = require("filesystem")
+shell.setWorkingDirectory("/RRS")
 local conf = require("rrs.conf")
 local BFS = require("route").BFS
 local moreTable = require("moreTable")
@@ -266,3 +268,4 @@ for e in ipairs(events) do
     event.cancel(e)
 end
 m.close(conf.Port)
+shell.setWorkingDirectory(workingDir)
