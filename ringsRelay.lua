@@ -1,27 +1,51 @@
+----------------- Configuration --------------------------------
+
+-- List of Players that are allowed to interact with this
+-- program
+local AllowedPlayerList = {}
+
+-- List of specific modem addresses that are allowed to interact
+-- with this program
+-- if message is from one of these addresses AllowedPlayerList
+-- will be disregarded
+local AllowedAddressList = {}
+
+-- if both allow lists are empty they will not be applied
+
+-- Custom name:
+-- a custom name to set for this set of rings
+local CustName = nil
+
+-- Rings Type:
+-- 0 for Goa'uld
+-- 1 for Ori
+local Type = 0
+
+-- Get Network on boot:
+-- whether or not to get the relay network on boot
+-- you will likly only haev to set this to true on one relay
+local GetNetworkOnBoot = false
+
+-- Comms port:
+-- the port the system will use for communication
+local Port = 1
+
+-- System code:
+-- the code the system will use to identify sets fo rings that
+-- are in the system
+local SysCode = "Alpha"
+
 ----------------- Declarations ---------------------------------
-local shell = require("shell")
-local workingDir = shell.getWorkingDirectory()
+
 local c = require("component")
-if not c.isAvailable("transportrings") then
-    print("Transport rings are required for the operation of this program")
-    os.exit()
-end
 local tr = c.transportrings
 local m = c.modem
 local serialization = require("serialization")
 local event = require("event")
-local fs = require("filesystem")
-shell.setWorkingDirectory("/RRS")
-local conf = require("config")
-local BFS = require("route").BFS
-local moreTable = require("moreTable")
-
-local events = {}
 local OwnName = ""
-local logPath = ""
 
 m.setWakeMessage('', true)
-m.open(conf.Port)
+m.open(Port)
 m.setStrength(200)
 local NearAddresses = {}
 local AddressChain = {}
@@ -42,9 +66,9 @@ end
 
 local OwnAddress = ""
 
-if conf.Type == 1 then
+if Type == 1 then
     OwnAddress = SerializeAddress(tr.getAddress().ORI)
-elseif conf.Type == 0 then
+elseif Type == 0 then
     OwnAddress = SerializeAddress(tr.getAddress().GOAULD)
 else
     print("Unknown address type")
@@ -52,37 +76,102 @@ else
 end
 
 local function SetRingsID()
-    if moreTable.contains(moreTable.keys(conf), "CustName") then
-        tr.setName(conf.SysCode .. "|" .. conf.CustName)
+    if table.contains({nil, ""}, CustName) then
+        tr.setName(SysCode .. "|" .. m.address)
     else
-        tr.setName(conf.SysCode .. "|" .. m.address)
+        tr.setName(SysCode .. "|" .. CustName)
     end
     OwnName = tr.getName()
-end
-
-local function time()
-    local tmpFile = io.open("/tmp/.time", "w")
-    tmpFile:write()
-    tmpFile:close()
-    return os.date("%H:%M %d/%m", math.floor(fs.lastModified("/tmp/.time") / 1000))..""
-end
-
-local function log(type, ...)
-    local log = io.open(logPath, "a")
-    log:write(time().. " " .. type .. " " .. serialization.serialize(...))
-    log:close()
 end
 
 local function Reset()
     AddressChain = {}
     Locked = false
-    LastSignal.ADDRESS = nil
-    LastSignal.SIGNAL = nil
     print("Ready")
 end
 
+function table.index(array, value)
+    for i, v in ipairs(array) do
+        if v == value then
+            return i
+        end
+    end
+    return nil
+end
+
+function table.contains(array, value)
+    for i, v in ipairs(array) do
+        if v == value then
+            return true
+        end
+    end
+    for k, v in pairs(array) do
+        if k == value then
+            return true
+        end
+    end
+    return false
+end
+
+function table.keys(array)
+    local keys = {}
+    for k, v in pairs(array) do
+        table.insert(keys, k)
+    end
+    return keys
+end
+
+function table.values(array)
+    local values = {}
+    for k, v in pairs(array) do
+        table.insert(values, v)
+    end
+    return values
+end
+
 local function RelayData(...)
-    m.broadcast(conf.Port, ...)
+    m.broadcast(Port, ...)
+end
+
+local function BFS(node, goal)
+    local visited = {}
+    local queue = {}
+    local path = {}
+
+    table.insert(queue, node)
+    table.insert(visited, node)
+    while #queue > 0 do
+        local working = {queue[1]}
+        local near = table.keys(KnownRings[working[1]].NEAR)
+        if #near > 0 then
+            for i, neighbour in ipairs(near) do
+                if not table.contains(visited, neighbour) then
+                    visited[neighbour] = working
+                    table.insert(queue, neighbour)
+                end
+            end
+        else
+            print("ERROR data for", working, "Missing")
+        end
+        table.remove(queue, 1)
+        if table.contains(visited, goal) then
+            queue = {}
+        end
+    end
+    local atStart = false
+    local reversePath = {}
+    table.insert(reversePath, goal)
+    while not atStart do
+        table.insert(reversePath, visited[reversePath[#reversePath]][1])
+        if reversePath[#reversePath] == node then
+            atStart = true
+        end
+        os.sleep()
+    end
+    for i = #reversePath, 1, -1 do
+        table.insert(path, reversePath[i])
+    end
+    return path
 end
 
 local function GetNearby()
@@ -90,9 +179,9 @@ local function GetNearby()
     local tempAdds = tr.getAvailableRingsAddresses()
     NearAddresses = {}
     for i, address in ipairs(tempAdds) do
-        if conf.Type == 0 then
+        if Type == 0 then
             NearAddresses[temp_near[address.GOAULD]] = address.GOAULD
-        elseif conf.Type == 1 then
+        elseif Type == 1 then
             NearAddresses[temp_near[address.ORI]] = address.ORI
         end
     end
@@ -108,9 +197,9 @@ local function DialAddress(address)
     print("Dialing:")
     for i, v in ipairs(addressUnSed)do
         print(v)
-        tr.addSymbolToAddress(conf.Type, v)
+        tr.addSymbolToAddress(Type, v)
     end
-    print(tr.addSymbolToAddress(conf.Type, 5))
+    print(tr.addSymbolToAddress(Type, 5))
 
 end
 
@@ -126,14 +215,11 @@ local function BounceBack(index, AddressChain, final)
         m.broadcast(1, "Complete")
     end
     Reset()
-    if conf.logging.relays then
-        log("relay", AddressChain)
-    end
 end
 
 local function TransportRelay(AddressChain)
     print("relaying")
-    local index = moreTable.index(AddressChain, OwnName)
+    local index = table.index(AddressChain, OwnName)
     if index == nil then
         print("not me")
         return nil
@@ -151,22 +237,18 @@ local function TransportRelay(AddressChain)
         m.broadcast(1, "Complete")
         Reset()
     end
-    if index == #AddressChain then
-        if conf.logging.endings then
-            log("end", AddressChain)
-        end
-    end
 end
 
 local function AddAddressToKnown(data)
-    -- if not moreTable.contains(KnownRings, data[#data]) then
-    if #moreTable.keys(serialization.unserialize(data[3])) < 1 then
-        print("ERROR rings:", data[#data], "has no near rings")
-        return nil
+    if not table.contains(KnownRings, data[#data]) then
+        if #table.keys(serialization.unserialize(data[3])) < 1 then
+            print("ERROR rings:", data[#data], "has no near rings")
+            return nil
+        end
+        KnownRings[data[#data]] = {}
+        KnownRings[data[#data]].NEAR = serialization.unserialize(data[3])
+        KnownRings[data[#data]].ADDRESS = data[2]
     end
-    KnownRings[data[#data]] = {}
-    KnownRings[data[#data]].NEAR = serialization.unserialize(data[3])
-    KnownRings[data[#data]].ADDRESS = data[2]
 end
 
 local function GetNetwork()
@@ -188,26 +270,22 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
     elseif data[1] == "Gimme" then
         local nearAddressesSerial = serialization.serialize(NearAddresses)
         m.broadcast(1, "Collect", OwnAddress, nearAddressesSerial, OwnName)
-    elseif data[1] == "disabled" then
-        KnownRings = {}
-        AddAddressToKnown({"", OwnAddress, serialization.serialize(NearAddresses), OwnName})
-        GetNetwork()
     elseif data[1] == "Transport" then
         Locked = true
         TransportRelay(serialization.unserialize(data[2]))
     elseif data[1] == "Complete" then
         Reset()
     elseif data[1] == "getNetwork" then
-        if moreTable.contains(conf.AllowedAddressList, originAdd) then
+        if table.contains(AllowedAddressList, originAdd) then
             print("Relay was activated from an authorized address(\"" .. originAdd .. "\")")
-        elseif #conf.AllowedAddressList > 0 then
+        elseif #AllowedAddressList > 0 then
             return nil
         end
         GetNetwork()
     elseif data[1] == "startRelay" then
-        if moreTable.contains(conf.AllowedAddressList, originAdd) then
+        if table.contains(AllowedAddressList, originAdd) then
             print("Relay was activated from an authorized address(\"" .. originAdd .. "\")")
-        elseif #conf.AllowedAddressList > 0 then
+        elseif #AllowedAddressList > 0 then
             Reset()
             return nil
         end
@@ -215,7 +293,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
             print("message sent from too great a distance (more than 5 blocks away)")
             Reset()
             return nil
-        elseif not moreTable.contains(KnownRings, data[2]) then
+        elseif not table.contains(KnownRings, data[2]) then
             print(data[2], "not in known rings")
             return nil
         elseif data[2] == OwnName then
@@ -223,10 +301,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
             return nil
         end
         print(KnownRings[data[2]])
-        local route = BFS(OwnName, data[2], KnownRings)
-        if conf.logging.initiations then
-            log("initiation", originAdd, route)
-        end
+        local route = BFS(OwnName, data[2])
         m.broadcast(1, "Transport", serialization.serialize(route))
         TransportRelay(route)
     end
@@ -235,42 +310,23 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
     end
 end
 
-
-
 local function MainLoop()
-    for i, v in ipairs(conf.AllowedPlayerList) do
-        table.insert(conf.AllowedAddressList, "unv-dialer-" .. v)
+    for i, v in ipairs(AllowedPlayerList) do
+        table.insert(AllowedAddressList, "unv-dialer-" .. v)
     end
     SetRingsID()
     GetNearby()
-    AddAddressToKnown({"", OwnAddress, serialization.serialize(NearAddresses), OwnName})
-    if conf.GetNetworkOnBoot then
+    AddAddressToKnown(
+        {"", OwnAddress,
+        serialization.serialize(NearAddresses),
+        OwnName})
+    if GetNetworkOnBoot then
         GetNetwork()
     end
     local loop = true
-    table.insert(events, event.listen("interrupted", function ()
-        loop = false
-        event.push("modem_message", nil, nil, nil, nil)
-    end))
-
-    if conf.logging.general then
-        if not fs.isDirectory(conf.logging.path) then
-            fs.makeDirectory(conf.logging.path)
-        end
-        logPath = fs.concat(conf.logging.path, time())
-        local log = io.open(logPath, "w")
-        log:close()
-    end
     while loop do
         ModemMessageHandler(event.pull("modem_message"))
     end
 end
 
-
-
 MainLoop()
-for e in ipairs(events) do
-    event.cancel(e)
-end
-m.close(conf.Port)
-shell.setWorkingDirectory(workingDir)
