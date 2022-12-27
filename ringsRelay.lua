@@ -14,7 +14,7 @@ local AllowedAddressList = {}
 
 -- Custom name:
 -- a custom name to set for this set of rings
-local CustName = nil
+local CustName = ""
 
 -- Rings Type:
 -- 0 for Goa'uld
@@ -76,7 +76,7 @@ else
 end
 
 local function SetRingsID()
-    if table.contains({nil, ""}, CustName) then
+    if CustName == "" or CustName == nil then
         tr.setName(SysCode .. "|" .. m.address)
     else
         tr.setName(SysCode .. "|" .. CustName)
