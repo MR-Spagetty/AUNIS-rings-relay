@@ -68,8 +68,9 @@ local function time()
 end
 
 local function log(type, ...)
-    local log = fs.open(logPath, "a")
+    local log = io.open(logPath, "a")
     log:write(time().. " " .. type .. " " .. serialization.serialize(...))
+    log:close()
 end
 
 local function Reset()
@@ -256,7 +257,7 @@ local function MainLoop()
             fs.makeDirectory(conf.logging.path)
         end
         logPath = fs.concat(conf.logging.path, time())
-        local log = fs.open(logPath, "w")
+        local log = io.open(logPath, "w")
         log:close()
     end
     while loop do
