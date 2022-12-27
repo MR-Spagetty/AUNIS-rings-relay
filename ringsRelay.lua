@@ -14,7 +14,7 @@ local AllowedAddressList = {}
 
 -- Custom name:
 -- a custom name to set for this set of rings
-local CustName = nil
+local CustName = ""
 
 -- Rings Type:
 -- 0 for Goa'uld
@@ -23,7 +23,7 @@ local Type = 0
 
 -- Get Network on boot:
 -- whether or not to get the relay network on boot
--- you will likly only haev to set this to true on one relay
+-- you will likly only have to set this to true on one relay
 local GetNetworkOnBoot = false
 
 -- Comms port:
@@ -76,7 +76,7 @@ else
 end
 
 local function SetRingsID()
-    if table.contains({nil, ""}, CustName) then
+    if CustName == "" then
         tr.setName(SysCode .. "|" .. m.address)
     else
         tr.setName(SysCode .. "|" .. CustName)
@@ -322,6 +322,7 @@ local function MainLoop()
         OwnName})
     if GetNetworkOnBoot then
         GetNetwork()
+        event.push("modem_message", nil, nil, nil, 0, "Gimme")
     end
     local loop = true
     while loop do
