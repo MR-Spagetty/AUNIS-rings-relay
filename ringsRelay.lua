@@ -52,10 +52,10 @@ else
 end
 
 local function SetRingsID()
-    if conf.CustName == "" then
-        tr.setName(conf.SysCode .. "|" .. m.address)
-    else
+    if moreTable.contains(moreTable.keys(conf), "CustName") then
         tr.setName(conf.SysCode .. "|" .. conf.CustName)
+    else
+        tr.setName(conf.SysCode .. "|" .. m.address)
     end
     OwnName = tr.getName()
 end

@@ -15,7 +15,7 @@ AllowedAddressList = {},
 
 -- Custom name:
 -- a custom name to set for this set of rings
-CustName = "",
+CustName = nil,
 
 -- Rings Type:
 -- 0 for Goa'uld
