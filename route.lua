@@ -12,7 +12,7 @@ BFS = function (node, goal, KnownRings)
     table.insert(visited, node)
     while #queue > 0 do
         local working = {queue[1]}
-        local near = table.keys(KnownRings[working[1]].NEAR)
+        local near = moreTable.keys(KnownRings[working[1]].NEAR)
         if #near > 0 then
             for i, neighbour in ipairs(near) do
                 if not moreTable.contains(visited, neighbour) then
