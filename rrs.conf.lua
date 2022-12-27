@@ -1,5 +1,5 @@
 local config = {
------------------ Configuration --------------------------------
+----------------- Configuration Options--------------------------------
 
 -- List of Players that are allowed to interact with this
 -- program
