@@ -52,7 +52,7 @@ else
 end
 
 local function SetRingsID()
-    if moreTable.contains({nil, ""}, conf.CustName) then
+    if conf.CustName == "" then
         tr.setName(conf.SysCode .. "|" .. m.address)
     else
         tr.setName(conf.SysCode .. "|" .. conf.CustName)
