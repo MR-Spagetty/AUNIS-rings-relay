@@ -17,7 +17,7 @@ local GitVersions = require("rrsGitVersions")
 
 local updated = false
 for comp, GitVersion in pairs(GitVersions) do
-    if (versions[comp] < GitVersion) + (arg[1] == "--force") then
+    if (versions[comp].version < GitVersion.version) + (arg[1] == "--force") then
         if shell.execute("wget " .. GitVersions[comp].link .. " /RRS/" .. comp .. ".lua -f")
         then updated = true
             for _, line in ipairs(GitVersions[comp].changelog) do
