@@ -50,6 +50,6 @@ logging = {
 }
 }
 
-config.logging.general = config.logging.initiations + config.logging.relays + config.logging.endings
+config.logging.general = config.logging.initiations or config.logging.relays or config.logging.endings
 
 return config
