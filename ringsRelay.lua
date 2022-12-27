@@ -61,7 +61,10 @@ local function SetRingsID()
 end
 
 local function time()
-    return os.date("%H:%M %d/%m", getRealTime())..""
+    local tmpFile = io.open("/tmp/.time", "w")
+    tmpFile:write()
+    tmpFile:close()
+    return os.date("%H:%M %d/%m", math.floor(filesystem.lastModified("/tmp/.time") / 1000))..""
 end
 
 local function log(type, ...)
