@@ -12,6 +12,14 @@ for k, v in pairs(array) do
 end
 return false
 end,
+index = function (array, value)
+    for i, v in ipairs(array) do
+        if v == value then
+            return i
+        end
+    end
+    return nil
+end,
 keys = function (array)
     local keys = {}
     for k, v in pairs(array) do
