@@ -13,7 +13,7 @@ local GitVersions = require("rrsGitVersions")
 local updated = false
 local args, opts = shell.parse(...)
 for comp, GitVersion in pairs(GitVersions) do
-    if versions[comp].version < GitVersion.version or opts.force then
+    if versions[comp].version < GitVersion.version or opts.f then
         if shell.execute("wget " .. GitVersions[comp].link .. " /RRS/" .. comp .. ".lua -f")
         then updated = true
             for _, line in ipairs(GitVersions[comp].changelog) do
@@ -23,7 +23,7 @@ for comp, GitVersion in pairs(GitVersions) do
     end
     if updated
     then shell.execute("wget https://raw.githubusercontent.com/MR-Spagetty/AUNIS-rings-relay/main/rrsVersions.lua /RRS/rrsVersions.lua -f")
-    else print("if you want to force the program to install the current github version please use \"rss -force\"")
+    else print("if you want to force the program to install the current github version please use \"rss -f\"")
     end
 end
 end
