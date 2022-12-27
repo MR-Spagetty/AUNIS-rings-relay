@@ -244,7 +244,7 @@ local function MainLoop()
         GetNetwork()
     end
     local loop = true
-    events.insert( event.listen("interrupted", function ()
+    table.insert(events, event.listen("interrupted", function ()
         loop = false
     end))
 
