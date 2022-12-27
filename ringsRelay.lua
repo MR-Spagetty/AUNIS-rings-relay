@@ -250,6 +250,7 @@ local function MainLoop()
     local loop = true
     table.insert(events, event.listen("interrupted", function ()
         loop = false
+        event.push("modem_message", nil, nil, nil, nil)
     end))
 
     if conf.logging.general then
