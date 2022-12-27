@@ -12,7 +12,7 @@ local versions = {
         changelog = {
             "Initial release"
         },
-        link = "https://raw.githubusercontent.com/MR-Spagetty/AUNIS-rings-relay/main/rrsConf.lua"
+        link = "https://raw.githubusercontent.com/MR-Spagetty/AUNIS-rings-relay/main/config.lua"
     },
     route = {
         version = 1,
