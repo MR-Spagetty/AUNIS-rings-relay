@@ -36,3 +36,4 @@ local versions = {
         link = "https://raw.githubusercontent.com/MR-Spagetty/AUNIS-rings-relay/main/moreTable.lua"
     }
 }
+return versions
