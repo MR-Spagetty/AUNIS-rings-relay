@@ -40,11 +40,11 @@ SysCode = "Alpha",
 -- whether or not the system will log various actions
 logging = {
     -- if this node is the beginning of the route
-    initiations = true,
+    initiations = false,
     -- if the route passed through this node
-    relays = true,
+    relays = false,
     -- if this node is the end of the route
-    endings = true,
+    endings = false,
     -- where the logs will be saved
     path = "/home/rrsLogs"
 }
