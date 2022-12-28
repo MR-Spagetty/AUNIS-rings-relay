@@ -29,11 +29,23 @@ This system is specifically designed to artificially extend the horizontal reach
 
    *The only control option*
 
+## Installation
+
+To install the Rings Relay System simply put run the command:
+```
+wget https://raw.githubusercontent.com/MR-Spagetty/AUNIS-rings-relay/main/ringsRelay.lua -f
+```
+in the shell of the computer you want to install it on.  
+recommended optional steps:
+
+- add `ringsRelay` to the `/home/.shrc` file so that it automatically starts with the computer
+- set the modem wake message (also recommend setting the wake message to be fuzzy)
+
 ## Wireless commands
 
 - ```getNetwork```
 
-   Tells a node to get all tet available rings
+   Tells a node to get all the available rings
 - ```startRelay,<NodeID>```
 
    Tells a node to start tth relay to go to the specified node.  
