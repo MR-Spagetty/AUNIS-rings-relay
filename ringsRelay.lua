@@ -1,3 +1,5 @@
+-- Ver: 1.0.0
+-- By: MR_Spagetty
 ----------------- Configuration --------------------------------
 
 -- List of Players that are allowed to interact with this
