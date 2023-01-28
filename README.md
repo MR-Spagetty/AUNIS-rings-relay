@@ -29,6 +29,16 @@ This system is specifically designed to artificially extend the horizontal reach
 
    *The only control option*
 
+## Computer requirements
+
+The **minimum** components needed to run the program are:
+
+- Tier 2 computer case
+- Tier 2 CPU
+- Tier 2 memory x2
+- Tier 2 Wireless network card
+- Rings (Any type)
+
 ## Installation
 
 To install the Rings Relay System simply put run the command:
