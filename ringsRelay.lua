@@ -50,7 +50,7 @@ m.setWakeMessage('', true)
 m.open(Port)
 m.setStrength(200)
 local NearAddresses = {}
-local AddressChain = {}
+local AddressChain = ""
 local LastSignal = {ADDRESS = nil, SIGNAL = nil}
 local Locked = false
 
@@ -87,7 +87,7 @@ local function SetRingsID()
 end
 
 local function Reset()
-    AddressChain = {}
+    AddressChain = ""
     Locked = false
     LastSignal.ADDRESS = nil
     LastSignal.SIGNAL = nil
@@ -162,6 +162,10 @@ local function BFS(node, goal)
             queue = {}
         end
     end
+    if not table.contains(visited, goal) then
+        print("Unable to find route to \""..goal.."\"")
+        return nil
+    end
     local atStart = false
     local reversePath = {}
     table.insert(reversePath, goal)
@@ -216,7 +220,7 @@ local function BounceBack(index, AddressChain, final)
     DialAddress(NearAddresses[AddressChain[index-1]])
     event.pull("transportrings_teleport_finish")
     if index == 2 then
-        m.broadcast(Port, "Complete")
+        m.broadcast(Port, "Complete", AddressChain)
         Reset()
     end
 end
@@ -243,7 +247,7 @@ local function TransportRelay(AddressChain)
         BounceBack(index, AddressChain, #AddressChain)
     elseif #AddressChain == 2 then
         -- relay has finished running
-        m.broadcast(Port, "Complete")
+        m.broadcast(Port, "Complete", AddressChain)
         Reset()
     end
 end
@@ -279,10 +283,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
     elseif data[1] == "Gimme" then
         local nearAddressesSerial = serialization.serialize(NearAddresses)
         m.broadcast(Port, "Collect", OwnAddress, nearAddressesSerial, OwnName)
-    elseif data[1] == "Transport" then
-        Locked = true
-        TransportRelay(serialization.unserialize(data[2]))
-    elseif data[1] == "Complete" then
+    elseif data[1] == "Complete" and data[2] == AddressChain then
         Reset()
     elseif data[1] == "getNetwork" then
         if table.contains(AllowedAddressList, originAdd) then
@@ -291,8 +292,15 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
             return nil
         end
         GetNetwork()
+    elseif Locked then
+        return nil
+    elseif data[1] == "Transport" then
+        AddressChain = data[2]
+        Locked = true
+        TransportRelay(serialization.unserialize(data[2]))
     elseif data[1] == "startRelay" then
         print("Relay request to location \"".. data[2].."\" origonating from \"".. originAdd.."\"")
+        -- check that request origonated from an autharised address
         if table.contains(AllowedAddressList, originAdd) then
             print("Relay activation authorized")
         elseif #AllowedAddressList > 0 then
@@ -300,19 +308,28 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
             return nil
         end
         if distance > 5 then
+            -- check that request was close enough to be correctly interprited as an instruction for this node
             print("message sent from too great a distance (more than 5 blocks away)")
             return nil
         elseif not table.contains(KnownRings, data[2]) then
+            -- check that the requested destination is known
             print(data[2], "not in known rings")
             return nil
         elseif data[2] == OwnName then
+            -- check that teh request is not for transportation to this node
             print("you can't transport to the location you are already at")
             return nil
         end
         Locked = true;
         print(KnownRings[data[2]])
         local route = BFS(OwnName, data[2])
-        m.broadcast(Port, "Transport", serialization.serialize(route))
+        if route == nil then
+            -- no route was found
+            Reset()
+            return nil
+        end
+        AddressChain = serialization.serialize(route)
+        m.broadcast(Port, "Transport", AddressChain)
         TransportRelay(route)
     end
     if distance > 0.9*m.getStrength() then
@@ -321,9 +338,11 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
 end
 
 local function MainLoop()
+    -- add allowed players to allowed addresses as universe dialers
     for i, v in ipairs(AllowedPlayerList) do
         table.insert(AllowedAddressList, "unv-dialer-" .. v)
     end
+    -- perform setup actions
     SetRingsID()
     GetNearby()
     AddAddressToKnown(
@@ -331,6 +350,7 @@ local function MainLoop()
         serialization.serialize(NearAddresses),
         OwnName})
     if GetNetworkOnBoot then
+        -- get network if setup to do so on boot
         GetNetwork()
         local nearAddressesSerial = serialization.serialize(NearAddresses)
         m.broadcast(Port, "Collect", OwnAddress, nearAddressesSerial, OwnName)
