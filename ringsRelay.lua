@@ -50,7 +50,7 @@ m.setWakeMessage('', true)
 m.open(Port)
 m.setStrength(200)
 local NearAddresses = {}
-local AddressChain = ""
+local AddressChainVerify = ""
 local LastSignal = {ADDRESS = nil, SIGNAL = nil}
 local Locked = false
 
@@ -87,7 +87,7 @@ local function SetRingsID()
 end
 
 local function Reset()
-    AddressChain = ""
+    AddressChainVerify = ""
     Locked = false
     LastSignal.ADDRESS = nil
     LastSignal.SIGNAL = nil
@@ -220,7 +220,7 @@ local function BounceBack(index, AddressChain, final)
     DialAddress(NearAddresses[AddressChain[index-1]])
     event.pull("transportrings_teleport_finish")
     if index == 2 then
-        m.broadcast(Port, "Complete", AddressChain)
+        m.broadcast(Port, "Complete", AddressChainVerify)
         Reset()
     end
 end
@@ -247,7 +247,7 @@ local function TransportRelay(AddressChain)
         BounceBack(index, AddressChain, #AddressChain)
     elseif #AddressChain == 2 then
         -- relay has finished running
-        m.broadcast(Port, "Complete", AddressChain)
+        m.broadcast(Port, "Complete", AddressChainVerify)
         Reset()
     end
 end
@@ -283,7 +283,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
     elseif data[1] == "Gimme" then
         local nearAddressesSerial = serialization.serialize(NearAddresses)
         m.broadcast(Port, "Collect", OwnAddress, nearAddressesSerial, OwnName)
-    elseif data[1] == "Complete" and data[2] == AddressChain then
+    elseif data[1] == "Complete" and data[2] == AddressChainVerify then
         Reset()
     elseif data[1] == "getNetwork" then
         if table.contains(AllowedAddressList, originAdd) then
@@ -295,7 +295,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
     elseif Locked then
         return nil
     elseif data[1] == "Transport" then
-        AddressChain = data[2]
+        AddressChainVerify = data[2]
         Locked = true
         TransportRelay(serialization.unserialize(data[2]))
     elseif data[1] == "startRelay" then
@@ -328,8 +328,8 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
             Reset()
             return nil
         end
-        AddressChain = serialization.serialize(route)
-        m.broadcast(Port, "Transport", AddressChain)
+        AddressChainVerify = serialization.serialize(route)
+        m.broadcast(Port, "Transport", AddressChainVerify)
         TransportRelay(route)
     end
     if distance > 0.9*m.getStrength() then
