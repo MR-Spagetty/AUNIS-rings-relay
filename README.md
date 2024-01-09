@@ -58,9 +58,17 @@ recommended optional steps:
    Tells a node to get all the available rings
 - ```startRelay,<NodeID>```
 
-   Tells a node to start tth relay to go to the specified node.  
+   Tells a node to start the relay to go to the specified node.  
    Nodes will ignore this signal if it was received from more than 5 blocks away.  
    NodeID will be either of one of the formats:
 
    - ```<SysCode>|<modem address>```
    - ```<SysCode>|<CustName>```
+
+   for example to use the relay to get to a node with a SysCode of `Alpha`  
+   and a custom name of `Hub` you would send hte command:  
+   ```startRelay,Alpha|Hub```
+- ```Reboot```
+
+   (As of version 1.0.1)  
+   Tells the receiving node to reboot
