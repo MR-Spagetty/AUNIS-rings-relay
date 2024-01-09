@@ -89,6 +89,8 @@ end
 local function Reset()
     AddressChain = {}
     Locked = false
+    LastSignal.ADDRESS = nil
+    LastSignal.SIGNAL = nil
     print("Ready")
 end
 
