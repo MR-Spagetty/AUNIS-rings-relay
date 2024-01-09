@@ -170,7 +170,7 @@ local function BFS(node, goal)
     local reversePath = {}
     table.insert(reversePath, goal)
     while not atStart do
-        table.insert(reversePath, visited[reversePath[#reversePath]][1])
+        table.insert(reversePath, visited[reversePath[#reversePath]])
         if reversePath[#reversePath] == node then
             atStart = true
         end
