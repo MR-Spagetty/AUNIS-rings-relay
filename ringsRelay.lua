@@ -214,7 +214,7 @@ local function BounceBack(index, AddressChain, final)
     DialAddress(NearAddresses[AddressChain[index-1]])
     event.pull("transportrings_teleport_finish")
     if index == 2 then
-        m.broadcast(1, "Complete")
+        m.broadcast(Port, "Complete")
     end
     Reset()
 end
@@ -223,20 +223,25 @@ local function TransportRelay(AddressChain)
     print("relaying")
     local index = table.index(AddressChain, OwnName)
     if index == nil then
+        -- this set or rings is not utalized in this route
         print("not me")
         return nil
     end
     if index > 1 and index < #AddressChain then
+        -- wait until this set of rings has been dialed
         event.pull("transportrings_teleport_finish")
     end
     if index < #AddressChain then
+        -- perform next dial where applicable
         DialAddress(NearAddresses[AddressChain[index+1]])
         event.pull("transportrings_teleport_start")
     end
     if index > 1 and index < #AddressChain then
+        -- perform bounce back where applicable
         BounceBack(index, AddressChain, #AddressChain)
     elseif #AddressChain == 2 then
-        m.broadcast(1, "Complete")
+        -- relay has finished running
+        m.broadcast(Port, "Complete")
         Reset()
     end
 end
@@ -254,7 +259,7 @@ local function AddAddressToKnown(data)
 end
 
 local function GetNetwork()
-    m.broadcast(1, "Gimme")
+    m.broadcast(Port, "Gimme")
 end
 
 local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
@@ -271,7 +276,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
         AddAddressToKnown(data)
     elseif data[1] == "Gimme" then
         local nearAddressesSerial = serialization.serialize(NearAddresses)
-        m.broadcast(1, "Collect", OwnAddress, nearAddressesSerial, OwnName)
+        m.broadcast(Port, "Collect", OwnAddress, nearAddressesSerial, OwnName)
     elseif data[1] == "Transport" then
         Locked = true
         TransportRelay(serialization.unserialize(data[2]))
@@ -304,7 +309,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
         end
         print(KnownRings[data[2]])
         local route = BFS(OwnName, data[2])
-        m.broadcast(1, "Transport", serialization.serialize(route))
+        m.broadcast(Port, "Transport", serialization.serialize(route))
         TransportRelay(route)
     end
     if distance > 0.9*m.getStrength() then
@@ -325,7 +330,7 @@ local function MainLoop()
     if GetNetworkOnBoot then
         GetNetwork()
         local nearAddressesSerial = serialization.serialize(NearAddresses)
-        m.broadcast(1, "Collect", OwnAddress, nearAddressesSerial, OwnName)
+        m.broadcast(Port, "Collect", OwnAddress, nearAddressesSerial, OwnName)
     end
     local loop = true
     while loop do
