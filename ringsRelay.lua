@@ -12,6 +12,11 @@ local AllowedPlayerList = {}
 -- will be disregarded
 local AllowedAddressList = {}
 
+-- Code to check when a reboot command is received
+-- if blank or nil no code is required
+-- ignores allowed addresses
+local RebootCode = ""
+
 -- if both allow lists are empty they will not be applied
 
 -- Custom name:
@@ -280,7 +285,13 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
         LastSignal.ADDRESS = originAdd
         LastSignal.SIGNAL = data[1]
     end
-    if data[1] == "Collect" then
+    if data[1] == "Reboot" then
+        if RebootCode == "" or RebootCode == nil or data[2] == RebootCode then
+            require("computer").shutdown(true)
+        else
+            return nil
+        end
+    elseif data[1] == "Collect" then
         AddAddressToKnown(data)
     elseif data[1] == "Gimme" then
         local nearAddressesSerial = serialization.serialize(NearAddresses)
