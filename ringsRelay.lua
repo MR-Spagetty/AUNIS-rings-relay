@@ -306,7 +306,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
         end
         GetNetwork()
     elseif Locked then
-        return nil
+        print("Node is locked: command ignored")
     elseif data[1] == "Transport" then
         AddressChainVerify = data[2]
         Locked = true
