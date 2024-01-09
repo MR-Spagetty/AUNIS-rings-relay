@@ -215,8 +215,8 @@ local function BounceBack(index, AddressChain, final)
     event.pull("transportrings_teleport_finish")
     if index == 2 then
         m.broadcast(Port, "Complete")
+        Reset()
     end
-    Reset()
 end
 
 local function TransportRelay(AddressChain)
@@ -290,15 +290,15 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
         end
         GetNetwork()
     elseif data[1] == "startRelay" then
+        print("Relay request to location \"".. data[2].."\" origonating from \"".. originAdd.."\"")
         if table.contains(AllowedAddressList, originAdd) then
-            print("Relay was activated from an authorized address(\"" .. originAdd .. "\")")
+            print("Relay activation authorized")
         elseif #AllowedAddressList > 0 then
-            Reset()
+            print("Unauthorized request detected: Request ignored")
             return nil
         end
         if distance > 5 then
             print("message sent from too great a distance (more than 5 blocks away)")
-            Reset()
             return nil
         elseif not table.contains(KnownRings, data[2]) then
             print(data[2], "not in known rings")
@@ -307,6 +307,7 @@ local function ModemMessageHandler(ev, selfAdd, originAdd, port, distance, ...)
             print("you can't transport to the location you are already at")
             return nil
         end
+        Locked = true;
         print(KnownRings[data[2]])
         local route = BFS(OwnName, data[2])
         m.broadcast(Port, "Transport", serialization.serialize(route))
