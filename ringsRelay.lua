@@ -145,8 +145,8 @@ local function BFS(node, goal)
     table.insert(queue, node)
     table.insert(visited, node)
     while #queue > 0 do
-        local working = {queue[1]}
-        local near = table.keys(KnownRings[working[1]].NEAR)
+        local working = queue[1]
+        local near = table.keys(KnownRings[working].NEAR)
         if #near > 0 then
             for i, neighbour in ipairs(near) do
                 if not table.contains(visited, neighbour) then
